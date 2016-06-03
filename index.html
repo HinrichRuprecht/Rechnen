@@ -58,7 +58,8 @@
 	font-size:120%;
 	}
     </style>
-<h1><span id="title"></span><img id="icon" src="icon.png" height=43></h1>
+<h1><span id="title"></span>
+<img id="icon" src="icon.png" height=43 onclick="javascript:window.close()"></h1>
 <span id="Total"></span><span id='debug'></span><br>
 <button type="button" onclick="JavaScript:m='+';new_()">+</button>&nbsp;
 <button type="button" onclick="JavaScript:m='-';new_()">-</button>&nbsp;
@@ -133,6 +134,7 @@ function int_trans() {
     trans['de-klick to select field']
 	="ggf. vorher ins gewünschte Feld klicken";
     trans['de-show next part of result']="zeigt nächsten Ergebnisteil";
+    trans['de-Klick Adam Riese to exit']="Ende mit Klick auf Adam Riese";
     } // int_trans()
 
 function help_(str) {
@@ -147,6 +149,7 @@ function help_(str) {
 	str+="<br>"+_('input field has yellow background');
 	str+="<br>("+_('klick to select field')+").";
 	str+="<br>"+hint+" : "+_('show next part of result');
+	str+="<br>"+_('Klick Adam Riese to exit');
 	}
     else str=_(str);
     document.getElementById('dialog').innerHTML=str;
