@@ -91,7 +91,7 @@ var nextEmo=new Array(0,0,0); var nextEmoTotal=new Array(0,0,0);
 var emoticon0=new Array(0x1F620,0x1F610,0x1F600); // bad,neutral,good
 var noEmoticon=new Array(0x1F624,0x1F62C);
 var replaceEmo=new Array(0x1F630,0x1F631);
-var debg=0, show_opt=0; var tst=0; var curr_id=-1; var m;
+var debg=0, show_opt=0; var tst=0; var curr_id=-1; var m, prevM;
 var results=new Array(); 
 var maxId=-1;
 var nRows=1, nCols=3;
@@ -507,7 +507,7 @@ function new_ () {
 	else if (n_correct<n_wrong-tmp) { grade=0; }
 	else { grade=1; }
 	tmp="<span style='background-color:"+color+";'>"
-	    +getEmoticon(grade,nextEmoTotal)
+	    +prevM+getEmoticon(grade,nextEmoTotal)
 	    +"</span>";
 	// alrt(color);
 	document.getElementById('Total').innerHTML+=tmp;
@@ -515,12 +515,12 @@ function new_ () {
     carry=""; n_correct=0; n_wrong=0; tmp=""; 
     resultIds=new Array();
     if (m=='-') { calc=subtraktion(); }
-    else if (m=='+') { calc=addition(); }
     else if (m=='*') { calc=multiplikation(); }
     else if (m==':') { calc=division(); tmp=sep; }
+    else { calc=addition(); }
+    prevM=m;
     tmp+=hint; // show next part of result
     write_table(calc,tmp);
-    document.getElementById('Total').innerHTML+=m;
     }
 
 function check_result() {
