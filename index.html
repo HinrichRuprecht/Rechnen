@@ -51,27 +51,25 @@
 	/* height:8%;
 	width:8%; */
 	font-size:180%;
-	vertical-align:center;
 	}
       button2 {
 	/* height:8%;
 	width:8%; */
 	font-size:120%;
-	vertical-align:center;
 	}
     </style>
-<h1><span id="title"></span><img src="icon.png" height=43></h1>
-<span id='debug'></span><br>
-<button type="button" onclick="JavaScript:m='a';new_()">+</button>&nbsp;
-<button type="button" onclick="JavaScript:m='s';new_()">-</button>&nbsp;
-<button type="button" onclick="JavaScript:m='m';new_()">*</button>&nbsp;
-<button type="button" onclick="JavaScript:m='d';new_()">:</button>&nbsp;
+<h1><span id="title"></span><img id="icon" src="icon.png" height=43></h1>
+<span id="Total"></span><span id='debug'></span><br>
+<button type="button" onclick="JavaScript:m='+';new_()">+</button>&nbsp;
+<button type="button" onclick="JavaScript:m='-';new_()">-</button>&nbsp;
+<button type="button" onclick="JavaScript:m='*';new_()">*</button>&nbsp;
+<button type="button" onclick="JavaScript:m=':';new_()">:</button>&nbsp;
 <br><br>
 <button type="button" onclick="JavaScript:nCols--;new_()">&lt;</button>&nbsp;
 <button type="button" onclick="JavaScript:nCols++;new_()">&gt;</button>&nbsp;
 <button type="button2" onclick="JavaScript:nRows--;new_()">&or;</button>&nbsp;
 <button type="button2" onclick="JavaScript:nRows++;new_()">&and;</button>&nbsp;
-
+<span id="emoticon" style="font-size:large;"></span>
 <span id="calculate" style="font-size:large; font-family:monospace;"></span>
 <br>
 <a href='javascript:help_()'><span id="help"></span></a>&nbsp;&nbsp;
@@ -87,8 +85,13 @@ var sep=".", hint="H";
 if (language="de") sep=",";
 var trans=new Array();
 var values=new Array();
-var result, carry;
-var debg=0, show_opt=0; var tst=0; var curr_id=-1; var result; var m;
+var resultIds;
+var result, carry, n_correct, n_wrong, total_correct=0, total_wrong=0;
+var nextEmo=new Array(0,0,0); var nextEmoTotal=new Array(0,0,0);
+var emoticon0=new Array(0x1F620,0x1F610,0x1F600); // bad,neutral,good
+var noEmoticon=new Array(0x1F624,0x1F62C);
+var replaceEmo=new Array(0x1F630,0x1F631);
+var debg=0, show_opt=0; var tst=0; var curr_id=-1; var m;
 var results=new Array(); 
 var maxId=-1;
 var nRows=1, nCols=3;
@@ -175,6 +178,41 @@ function debg_() {
     alrt(str);
     } // debg_
 
+function set_emoticon(correct) {
+    var emoticon, n, color, grade;
+    if (correct>0) 
+	{ n_correct++; total_correct++; grade=2; } 
+    else { n_wrong++; total_wrong++; grade=0; }
+    emoticon=getEmoticon(grade,nextEmo);
+    document.getElementById('emoticon').innerHTML=emoticon;
+    document.getElementById('emoticon').style.backgroundColor
+	=getColor(n_correct,n_wrong);
+    document.getElementById('icon').style.backgroundColor
+	=getColor(total_correct,total_wrong);
+    }
+
+function getEmoticon(grade,next) { // 0=bad, 1=neutral, 2=good
+    var emo, i;
+    emo=emoticon0[grade]+next[grade];
+    // alrt("g="+grade+" emo="+emo+" 0="+emoticon0[grade].toString(16)
+    //	 +" n="+next[grade]);
+    for (i=0; i<=noEmoticon.length; i++)
+	{ if (emo==noEmoticon[i]) emo=replaceEmo[i]; break; }
+    next[grade]++; if (next[grade]>=16) next[grade]=0;
+    return "&#x"+emo.toString(16)+";";
+    }
+function getColor(good,bad) {
+    var red, green, blue="00";
+    green=Math.floor(255*good/(good+bad));
+    red=255-green;
+    if (good<bad) { red=255; }
+    else if (good==bad) { red=255; green=255; }
+    else { green=255; }
+    red=red.toString(16); if (red.length==1) red="0"+red;
+    green=green.toString(16); if (green.length==1) green="0"+green;
+    return "#"+red+green+blue;
+    } 
+
 function write_row(cols,value,style_,Ids) { // 
     // Ids() : hide value and store digits in results() for comparison
     // cols<0 : start hiding from position -col
@@ -206,7 +244,7 @@ function write_row(cols,value,style_,Ids) { //
 	    results[id]=digit;
 	    l1=l;
 	    str=str+'<td class="'+style_+'" '+'id="r'+id
-	       +'" onclick="JavaScript:highlight('+id+','+colorH+",''"+')">'; 
+	       +'" onclick="JavaScript:highlight('+id+','+colorH+')">'; 
 	    str=str+'<span id="s'+id+'">&nbsp;</span>'; 
 	    }
 	else { 
@@ -227,10 +265,10 @@ function write_row(cols,value,style_,Ids) { //
     } // write_row()
 
 function change(iCh) {
-    var curr_val="", check_, col, next_id, len_;
+    var curr_val, check_, col, next_id, len_, correct=1;
     curr_val=iCh; // curr_val+
     if (curr_id>maxId) return;
-    if (curr_val==hint) curr_val=results[curr_id];
+    if (curr_val==hint) { curr_val=results[curr_id]; correct=-1; }
     // check result/carry + highlight next element
      // ignore carry, if next result digit is correct:
     if (curr_val!=results[curr_id] && carry!="" && curr_id%2==0 
@@ -238,21 +276,24 @@ function change(iCh) {
 	highlight(curr_id,0);
 	curr_id++; 
 	}
-    document.getElementById('s'+curr_id).innerHTML=curr_val;
-    if (curr_val!=results[curr_id]) { highlight(curr_id,3); }
+    // document.getElementById('s'+curr_id).innerHTML=curr_val;
+    if (curr_val!=results[curr_id]) 
+	{ highlight(curr_id,3,curr_val); correct=0; }
     else {
-	highlight(curr_id,1); 
+	highlight(curr_id,1,curr_val); 
 	curr_id++;
 	while (curr_id<=maxId && !document.getElementById('r'+curr_id)) 
 	    curr_id++;
 	if (curr_id<=maxId)  highlight(curr_id,2);
 	}
+    if (correct>=0) set_emoticon(correct);
     }
 
 function highlight(id,colour,val) {
     var col=colours[colour];
     var col0=colours[0];
     //alrt("h"+curr_id);
+    if (document.getElementById('s'+id).innerHTML==results[id]) return;
     if (curr_id>=0 && document.getElementById('r'+curr_id)) {
 	document.getElementById('r'+curr_id).style.backgroundColor=col0;
 	}
@@ -261,7 +302,7 @@ function highlight(id,colour,val) {
 	document.getElementById('r'+curr_id).style.backgroundColor=col;
 	if (val!=undefined) document.getElementById('s'+curr_id).innerHTML=val;
 	}
-    } // highlight()
+    } // highlight
 
 function subtraktion () {
     var i, j, x, sum=0, minu, tmp, tmp2, f, str="", Ids=new Array();
@@ -300,9 +341,9 @@ function subtraktion () {
     for (j=0; j<carry.length; j++) { Ids[j]=2*(carry.length-j); }
     carry="         ".substr(0,nCols-carry.length)+carry; // nCols+1 ???
     str+=write_row(nCols,carry,"carry",Ids); // carry
-    for (j=0; j<result.length; j++) { Ids[j]=2*(result.length-j)-1; }
+    for (j=0; j<result.length; j++) { resultIds[j]=2*(result.length-j)-1; }
     result="         ".substr(0,nCols+1-result.length)+result;
-    str+=write_row(nCols+1,result,"box",Ids); // result
+    str+=write_row(nCols+1,result,"box",resultIds); // result
     maxId=2*result.length-1;
     return str;
     } // subtraktion
@@ -340,9 +381,9 @@ function addition () {
     for (j=0; j<carry.length; j++) { Ids[j]=2*(carry.length-j); }
     carry="         ".substr(0,nCols-carry.length)+carry; // nCols+1 ???
     str+=write_row(nCols,carry,"carry",Ids); // carry
-    for (j=0; j<result.length; j++) { Ids[j]=2*(result.length-j)-1; }
+    for (j=0; j<result.length; j++) { resultIds[j]=2*(result.length-j)-1; }
     result="         ".substr(0,nCols+1-result.length)+result;
-    str+=write_row(nCols+1,result,"box",Ids); // result
+    str+=write_row(nCols+1,result,"box",resultIds); // result
     maxId=2*result.length-1;
     return str;
     } // addition
@@ -378,16 +419,16 @@ function multiplikation () {
 	}
     if (col2>1) {
 	result=""+sum;
-	for (j=result.length-1; j>=0; j--) { maxId++; Ids[j]=maxId; }
+	for (j=result.length-1; j>=0; j--) { maxId++; resultIds[j]=maxId; }
 	result="         ".substr(0,col1+col2+1-result.length)+result;
-	str+=write_row(result.length,result,"result",Ids);
+	str+=write_row(result.length,result,"result",resultIds);
 	}
     return str;
     } // multiplikation
 
 function division () {
     var hide, result="", res1, keyb, minu, tmp, tmp2, l1, str, col1,col2, j,
-	iRes, Ids=new Array(), IdsRes=new Array();;
+	iRes, Ids=new Array(), msg="";
     if (nCols<1) { nCols=1; }
     if (nRows<1) { nRows=1; }
     var max=Math.pow(10,nCols);
@@ -414,7 +455,8 @@ function division () {
 	res1=Math.floor(val/val2);
 	result+=res1;
 	maxId++;
-	IdsRes[iRes]=maxId; 
+	resultIds[iRes]=maxId; 
+	msg+=maxId+"="+res1+" ";
 	iRes++;
 	tmp=res1*val2;
 	val-=tmp;
@@ -429,12 +471,12 @@ function division () {
 	tmp2="       ".substr(0,l1+1-tmp2.length)+tmp2;
 	str+=write_row(tmp2.length,tmp2,"result",Ids);
 	if (l1==col1 && val>0) 
-	    { result+=sep; maxId++; IdsRes[iRes]=maxId; iRes++; }
+	    { result+=sep; maxId++; resultIds[iRes]=maxId; iRes++; }
 	l1++;
 	}
     result="         ".substr(0,col1+col2+1-result.length)+result;
-    str=write_row(-hide,result,"box",IdsRes)+str;
-    //alrt(str);
+    str=write_row(-hide,result,"box",resultIds)+str;
+    //alrt(msg);
     return str;
     } // division
 
@@ -456,14 +498,48 @@ function write_table (calc,addKeys) {
     }
 
 function new_ () {
-    var calc=""; var tmp="";
-    carry="";
-    if (m=='s') { calc=subtraktion(); }
-    else if (m=='a') { calc=addition(); }
-    else if (m=='m') { calc=multiplikation(); }
-    else if (m=='d') { calc=division(); tmp=sep; }
+    var calc="", tmp, color, grade;
+    if (n_correct!=undefined) {
+	n_wrong+=check_result();
+	color=getColor(n_correct,n_wrong);
+	tmp=Math.floor((n_correct+n_wrong)/4);
+	if (n_correct>n_wrong+tmp) { grade=2; }
+	else if (n_correct<n_wrong-tmp) { grade=0; }
+	else { grade=1; }
+	tmp="<span style='color:"+color+";'>"
+	    +getEmoticon(grade,nextEmoTotal)
+	    +"</span>";
+	// alrt(color);
+	document.getElementById('Total').innerHTML+=tmp;
+	}
+    carry=""; n_correct=0; n_wrong=0; tmp=""; 
+    resultIds=new Array();
+    if (m=='-') { calc=subtraktion(); }
+    else if (m=='+') { calc=addition(); }
+    else if (m=='*') { calc=multiplikation(); }
+    else if (m==':') { calc=division(); tmp=sep; }
     tmp+=hint; // show next part of result
     write_table(calc,tmp);
+    document.getElementById('Total').innerHTML+=m;
+    }
+
+function check_result() {
+    var i, id, cnt=0, msg="";
+    // ??? results sometimes has undefined elements (too many resultIds)
+    for (i=0; i<=resultIds.length; i++) {
+	id=resultIds[i];
+	if (carry!="" && id%2==0) continue;
+	if (results[id]==undefined) break;
+	if (!document.getElementById('s'+id) ||
+	    results[id]!=document.getElementById('s'+id).innerHTML) {
+	    cnt++; 
+	    msg+=i+":"+id+":";
+	    if (!document.getElementById('s'+id)) msg+"!";
+	    msg+=results[id]+" ";
+	    }
+	}
+    //if (msg!="") alrt(msg+" res="+result);
+    return cnt;
     }
 
 function changeStyle (styleId,attr,val) {
@@ -496,7 +572,7 @@ function mobile_ () {
 
 int_trans(); // preset variables for translated text messages
 if (window.location.search != "") { read_params(window.location.search); }
-else m='s';
+else m='-';
 document.getElementById('title').innerHTML
     =_('Exercises in')+" "+_('Basic Arithmetic Operations');
 document.getElementById('help').innerHTML=_('Help');
