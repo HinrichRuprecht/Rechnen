@@ -506,7 +506,7 @@ function new_ () {
 	if (n_correct>n_wrong+tmp) { grade=2; }
 	else if (n_correct<n_wrong-tmp) { grade=0; }
 	else { grade=1; }
-	tmp="<span style='color:"+color+";'>"
+	tmp="<span style='background-color:"+color+";'>"
 	    +getEmoticon(grade,nextEmoTotal)
 	    +"</span>";
 	// alrt(color);
