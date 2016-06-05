@@ -7,7 +7,7 @@
 <meta name="description" content="Exercises in Basic Arithmetics" />
 <meta name="copyright" content="H. Ruprecht" />
 <meta name="license" content="GNU General Public License v2 or later"/>
-<link rel="shortcut icon" href="icon.png"/>
+<link rel="shortcut icon" href="AdamRiese.ico"/>
 </head>
 <body>
 <style>
@@ -31,8 +31,16 @@
       td.nobox {
 	border-collapse:collapse; 
 	}
+      td.xbox {
+	border-collapse:collapse; 
+	font-size:25%;
+	}
       td.result {
 	border:2px ridge;
+	}
+      td.xresult {
+	border-collapse:collapse; 
+	font-size:25%;
 	}
       td.carry {
         border:1px solid;
@@ -41,10 +49,10 @@
 	font-size:75%;
 	height: 80%;
 	}
-      td.nocarry {
+      td.xcarry {
         overflow:hidden;
         vertical-align:top;
-	font-size:75%;
+	font-size:25%;
 	height: 80%;
 	}
       button {
@@ -59,7 +67,7 @@
 	}
     </style>
 <h1><span id="title"></span>
-<img id="icon" src="icon.png" height=43 onclick="javascript:window.close()"></h1>
+<img id="icon" src="AdamRiese.ico" height=43 onclick="javascript:Finish();"></h1>
 <span id="Total"></span><span id='debug'></span><br>
 <button type="button" onclick="JavaScript:m='+';new_()">+</button>&nbsp;
 <button type="button" onclick="JavaScript:m='-';new_()">-</button>&nbsp;
@@ -76,8 +84,9 @@
 <a href='javascript:help_()'><span id="help"></span></a>&nbsp;&nbsp;
 <br>
 <span id='dialog'></span>&nbsp;&nbsp;
+
 <script type="text/javascript">
-var cellsize=10;
+var cellsize=10, fontSize=10;
 var colours=new Array("white","lime","yellow","red","aqua","fuchsia","blue");
 var language=navigator["language"];
 if (!language) language=navigator["userLanguage"];
@@ -89,9 +98,18 @@ var values=new Array();
 var resultIds;
 var result, carry, n_correct, n_wrong, total_correct=0, total_wrong=0;
 var nextEmo=new Array(0,0,0); var nextEmoTotal=new Array(0,0,0);
-var emoticon0=new Array(0x1F620,0x1F610,0x1F600); // bad,neutral,good
-var noEmoticon=new Array(0x1F624,0x1F62C);
-var replaceEmo=new Array(0x1F630,0x1F631);
+var emoticons=new Array();
+    emoticons[0]=new Array // bad
+	(0x1F620,0x1F621,0x1F622,0x1F623,0x1F625,0x1F628,0x1F629,0x1F62A
+	,0x1F62B,0x1F62D,0x1F630,0x1F631,0x1F632,0x1F633,0x1F61E);
+    emoticons[1]=new Array // neutral
+	(0x1F610,0x1F613,0x1F614,0x1F616,0x1F618,0x1F61A
+	,0x1F61C,0x1F61D,0x1F635,0x1F636);
+    emoticons[2]=new Array // good
+	(0x1F601,0x1F602,0x1F603,0x1F604,0x1F605,0x1F606,0x1F606,0x1F607
+	,0x1F608,0x1F609,0x1F60A,0x1F60B,0x1F60C,0x1F60D,0x1F60E,0x1F60F
+	,0x1F637,0x1F638,0x1F639,0x1F63A,0x1F63B,0x1F63C,0x1F63D,0x1F63E
+	,0x1F63F,0x1F640);
 var debg=0, show_opt=0; var tst=0; var curr_id=-1; var m, prevM;
 var results=new Array(); 
 var maxId=-1;
@@ -134,7 +152,7 @@ function int_trans() {
     trans['de-klick to select field']
 	="ggf. vorher ins gewünschte Feld klicken";
     trans['de-show next part of result']="zeigt nächsten Ergebnisteil";
-    trans['de-Klick Adam Riese to exit']="Ende mit Klick auf Adam Riese";
+    //trans['de-Klick Adam Riese to exit']="Ende mit Klick auf Adam Riese";
     } // int_trans()
 
 function help_(str) {
@@ -149,7 +167,7 @@ function help_(str) {
 	str+="<br>"+_('input field has yellow background');
 	str+="<br>("+_('klick to select field')+").";
 	str+="<br>"+hint+" : "+_('show next part of result');
-	str+="<br>"+_('Klick Adam Riese to exit');
+	//str+="<br>"+_('Klick Adam Riese to exit');
 	}
     else str=_(str);
     document.getElementById('dialog').innerHTML=str;
@@ -160,19 +178,13 @@ function alrt(str) {
     } // alrt()
 
 function read_params(searchstr) { // interpret parameters from url
-    var src='&'+searchstr.substr(1)+'&';
-    var p1=src.indexOf('m=');
-    var p2=src.indexOf('&',p1);
-    if (p1>=0) { p1+=2; m=src.substr(p1,p2-p1); }
-    var regexp=/\&l\=([^\&]+)\&/;
-    var par=regexp.exec(src);
-    if (par) language=par[1];
-    regexp=/\&m\=([^\&]+)\&/;
-    par=regexp.exec(src);
-    if (par) m=par[1];
+    var regexp, par, src='&'+searchstr.substr(1)+'&';
+    regexp=/\&l\=([^\&]+)\&/; par=regexp.exec(src); if (par) language=par[1];
+    regexp=/\&m\=([^\&]+)\&/; par=regexp.exec(src); if (par) m=par[1];
+    regexp=/\&t\=([^\&]+)\&/; par=regexp.exec(src); if (par) debg=par[1];
     } // read_params()
 
-function debg_() {
+function debg_() { // currently not used
     var str="Debug ";
     debg=1-debg; // toggle debg variable to be used for debug
     tst++; if (tst>3) tst=0; // 
@@ -183,25 +195,24 @@ function debg_() {
 
 function set_emoticon(correct) {
     var emoticon, n, color, grade;
-    if (correct>0) 
-	{ n_correct++; total_correct++; grade=2; } 
-    else { n_wrong++; total_wrong++; grade=0; }
+    if (correct<0) { grade=1; color="aqua"; }
+    else {
+	if (correct>0) 
+	    { n_correct++; total_correct++; grade=2; } 
+	else { n_wrong++; total_wrong++; grade=0; }
+	color=getColor(n_correct,n_wrong);
+	document.getElementById('icon').style.backgroundColor
+	    =getColor(total_correct,total_wrong);
+	}
     emoticon=getEmoticon(grade,nextEmo);
     document.getElementById('emoticon').innerHTML=emoticon;
-    document.getElementById('emoticon').style.backgroundColor
-	=getColor(n_correct,n_wrong);
-    document.getElementById('icon').style.backgroundColor
-	=getColor(total_correct,total_wrong);
+    document.getElementById('emoticon').style.backgroundColor=color;
     }
 
 function getEmoticon(grade,next) { // 0=bad, 1=neutral, 2=good
     var emo, i;
-    emo=emoticon0[grade]+next[grade];
-    // alrt("g="+grade+" emo="+emo+" 0="+emoticon0[grade].toString(16)
-    //	 +" n="+next[grade]);
-    for (i=0; i<=noEmoticon.length; i++)
-	{ if (emo==noEmoticon[i]) emo=replaceEmo[i]; break; }
-    next[grade]++; if (next[grade]>=16) next[grade]=0;
+    emo=emoticons[grade][next[grade]];
+    next[grade]++; if (next[grade]>=emoticons[grade].length) next[grade]=0;
     return "&#x"+emo.toString(16)+";";
     }
 function getColor(good,bad) {
@@ -238,7 +249,8 @@ function write_row(cols,value,style_,Ids) { //
 	    value=tmp+value; 
 	    }
     str='';tmp=''; iId=0;
-    str+='<tr>'; l1=-1; 
+    str+='<tr>'; 
+    l1=-1; 
     for (l=0; l<cols; l++) {
 	digit=value.substr(l,1);
 	if (Ids!=undefined && digit!=' ' && debg==0 && l>=hide) {
@@ -251,14 +263,16 @@ function write_row(cols,value,style_,Ids) { //
 	    str=str+'<span id="s'+id+'">&nbsp;</span>'; 
 	    }
 	else { 
-	    if (style_!=undefined) { str+='<td class="no'+style_+'">'; }
+	    if (style_!=undefined) {
+		tmp=(digit!=' '? "no" : "x"); 
+		str+='<td class="'+tmp+style_+'">'; }
 	    else { str=str+'<td>'; }
 	    if (buttons>0) { 
 		str=str+'<button type="button" class="button2" '
 		    +'onclick="JavaScript:change('+"'"+digit+"'"+')">'
 		    +digit+'</button>';
 		}
-	    else { str=str+digit; }
+	    else if (digit!=' ') { str=str+digit; }
 	    str=str+'</td>';
 	    }
 	}
@@ -268,7 +282,7 @@ function write_row(cols,value,style_,Ids) { //
     } // write_row()
 
 function change(iCh) {
-    var curr_val, check_, col, next_id, len_, correct=1;
+    var curr_val, check_, col, next_id, len_, correct=1, i, j;
     curr_val=iCh; // curr_val+
     if (curr_id>maxId) return;
     if (curr_val==hint) { curr_val=results[curr_id]; correct=-1; }
@@ -284,12 +298,26 @@ function change(iCh) {
 	{ highlight(curr_id,3,curr_val); correct=0; }
     else {
 	highlight(curr_id,1,curr_val); 
+	if (m==':' && curr_val!=sep) { // show previous sub-results smaller
+	    i=0;
+	    while (i<=resultIds.length && resultIds[i]!=curr_id) i++;
+	    if (i<=resultIds.length) {
+		if (i>0 && resultIds[i]==resultIds[i-1]+1) i--; // i-1:sep
+		j=(i<=0? 0 : resultIds[i-1])+1;
+		while (j<resultIds[i]) {
+		  if (document.getElementById('r'+j))
+		      { document.getElementById('r'+j).style.fontSize="small"; }
+		  j++; 
+		  }
+		}
+	    }
 	curr_id++;
 	while (curr_id<=maxId && !document.getElementById('r'+curr_id)) 
 	    curr_id++;
 	if (curr_id<=maxId)  highlight(curr_id,2);
 	}
-    if (correct>=0) set_emoticon(correct);
+    //if (correct>=0) 
+    set_emoticon(correct);
     }
 
 function highlight(id,colour,val) {
@@ -431,7 +459,7 @@ function multiplikation () {
 
 function division () {
     var hide, result="", res1, keyb, minu, tmp, tmp2, l1, str, col1,col2, j,
-	iRes, Ids=new Array(), msg="";
+	iRes, Ids=new Array(), msg="", iRow;
     if (nCols<1) { nCols=1; }
     if (nRows<1) { nRows=1; }
     var max=Math.pow(10,nCols);
@@ -478,7 +506,7 @@ function division () {
 	l1++;
 	}
     result="         ".substr(0,col1+col2+1-result.length)+result;
-    str=write_row(-hide,result,"box",resultIds)+str;
+    str=write_row(-hide,result,"result",resultIds)+str;
     //alrt(msg);
     return str;
     } // division
@@ -486,6 +514,8 @@ function division () {
 function write_table (calc,addKeys) {
     if (addKeys==undefined) addKeys="";
     var tab, str="", n, x; var border=0;
+    var keyboard=write_row(0,"k0123456789"+addKeys);
+    if (m==':') str+="<br>"+keyboard;
     tab='<table border="0" cellpadding="0" cellspacing="0">';
     str+=tab;
     str+=calc;
@@ -493,7 +523,7 @@ function write_table (calc,addKeys) {
     //str+=write_row(0,"k01234");    // keyboard
     //str+='<br>';
     //str+=write_row(0,"k56789"+addKeys);    // keyboard
-    str+=write_row(0,"k0123456789"+addKeys);    // keyboard
+    if (m!=':') str+=keyboard;
     document.getElementById("calculate").innerHTML =str;
     curr_id=-1;
     highlight(1,2);
@@ -501,15 +531,17 @@ function write_table (calc,addKeys) {
     }
 
 function new_ () {
-    var calc="", tmp, color, grade;
+    var calc="", tmp, size, color, grade;
     if (n_correct!=undefined) {
 	n_wrong+=check_result();
 	color=getColor(n_correct,n_wrong);
 	tmp=Math.floor((n_correct+n_wrong)/4);
 	if (n_correct>n_wrong+tmp) { grade=2; }
-	else if (n_correct<n_wrong-tmp) { grade=0; }
+	else if (n_correct>n_wrong-tmp) { grade=0; }
 	else { grade=1; }
-	tmp="<span style='background-color:"+color+";'>"
+	size=Math.floor(fontSize/2)+n_correct;
+	if (size>fontSize) size=fontSize;
+	tmp="<span style='background-color:"+color+"; font-size:"+size+"pt;'>"
 	    +prevM+getEmoticon(grade,nextEmoTotal)
 	    +"</span>";
 	// alrt(color);
@@ -535,9 +567,9 @@ function check_result() {
 	if (results[id]==undefined) break;
 	if (!document.getElementById('s'+id) ||
 	    results[id]!=document.getElementById('s'+id).innerHTML) {
-	    cnt++; 
 	    msg+=i+":"+id+":";
-	    if (!document.getElementById('s'+id)) msg+"!";
+	    if (document.getElementById('s'+id)) { cnt++; }
+	    else { msg+"!"; }
 	    msg+=results[id]+" ";
 	    }
 	}
@@ -568,9 +600,20 @@ function changeStyle (styleId,attr,val) {
 
 function mobile_ () {
     if (userAgent.match(/Android|Mobile/)) {
-	changeStyle("html","font-size","20pt");
+	fontSize=20;
+	changeStyle("html","font-size",""+fontSize+"pt");
 	changeStyle("td","font-size","35pt");
 	}
+    }
+
+function Finish() { 
+    // window.close() does not work in current browsers and in PhoneGap app
+    if (typeof navigator.app !== 'undefined') {
+            navigator.app.clearHistory();
+	    navigator.app.exitApp(); // exit app
+	    window.history.back();
+	    }
+    else { window.close(); } // usually not working 
     }
 
 int_trans(); // preset variables for translated text messages
@@ -580,6 +623,17 @@ document.getElementById('title').innerHTML
     =_('Exercises in')+" "+_('Basic Arithmetic Operations');
 document.getElementById('help').innerHTML=_('Help');
 mobile_();
+if (debg>0) {
+    msg="";
+    for (i=0; i<=2; i++) {
+	for (j=0; j<emoticons[i].length; j++) {
+	    emo=emoticons[i][j]; 
+	    msg+=(emo==undefined?"?"+i+j:"&#x"+emo.toString(16)+";");
+	    }
+	msg+="<br>";
+	}
+    alrt(msg);
+    }
 new_();
 //debg_();
 </script>
