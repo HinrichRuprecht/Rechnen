@@ -611,9 +611,11 @@ function Finish() {
     if (typeof navigator.app !== 'undefined') {
             navigator.app.clearHistory();
 	    navigator.app.exitApp(); // exit app
-	    window.history.back();
 	    }
-    else { window.close(); } // usually not working 
+    else if(navigator.device) { navigator.device.exitApp(); }
+}
+    window.history.back();
+    //else { window.close(); } // usually not working 
     }
 
 int_trans(); // preset variables for translated text messages
