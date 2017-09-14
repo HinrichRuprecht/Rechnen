@@ -1,4 +1,5 @@
 // javascript sources for Basic Arithmetics
+"use strict";
 var cellsize=10, fontSize=10;
 var colours=new Array("white","lime","yellow","red","aqua","fuchsia","blue");
 var language=navigator["language"];
@@ -166,11 +167,11 @@ function write_row(cols,value,style_,Ids) { //
     value=""+value;
     if (cols==undefined || cols==0) cols=value.length;
     
-    var str, len, l, l1, id, iId, tab, tmp, buttons=0, digit, hide=0;
+    var str, len, l, l1, id, iId, tab, tmp, buttons=0, digit, hide=0, id_;
     if (cols<0) { hide=-cols; cols=value.length; }
 
 	if (value.substr(0,1).toLowerCase()=="k")
-	    { buttons=1; value=value.substr(1); cols=value.length; }
+	    { buttons=1; value=value.substr(1); cols--; }
 	else {
 	    len=value.length;
 	    if (value.substr(0,1).match(/[\-\+]/)) 
@@ -184,26 +185,23 @@ function write_row(cols,value,style_,Ids) { //
     l1=-1; 
     for (l=0; l<cols; l++) {
 	digit=value.substr(l,1);
-	if (Ids!=undefined && digit!=' ' && debg==0 && l>=hide) {
-	    id=Ids[iId];
-	    iId++;
-	    results[id]=digit;
+	if ((Ids!=undefined || buttons>0) && digit!=' ' && debg<=0 && l>=hide) {
+	    if (buttons>0) { id_="kb"+l; }
+	    else { 
+		id=Ids[iId]; iId++; results[id]=digit; id_="rs"+id; 
+		}
 	    l1=l;
-	    str+='<td class="'+style_+'" '+'id="rs'+id+'">';
-	    str+='<span id="s'+id+'">&nbsp;</span></td>'; 
+	    str+='<td class="'+style_+'" '+'id="'+id_+'">';
+	    str+=(buttons==0? '<span id="s'+id+'">&nbsp;</span>' : digit);
+	    str+='</td>'; 
 	    }
 	else { 
 	    if (style_!=undefined) {
 		tmp=(digit!=' '? "no" : "x"); 
 		str+='<td class="'+tmp+style_+'">'; }
 	    else { str=str+'<td>'; }
-	    if (buttons>0) { 
-		str=str+'<button class="b2"'
-		   +' id="kb'+digit+'">'
-		   +digit+'</button>';
-		}
-	    else if (digit!=' ') { str=str+digit; }
-	    str=str+'</td>';
+	    if (digit!=' ') { str+=digit; }
+	    str+='</td>';
 	    }
 	}
     str=str+'</tr>';
@@ -213,8 +211,7 @@ function write_row(cols,value,style_,Ids) { //
 
 function change(id) {
     var curr_val, check_, col, len_, correct=1, i, j;
-    iCh=id.substr(2);
-    curr_val=iCh; // curr_val+
+    curr_val=document.getElementById(id).innerHTML; 
     if (curr_id>maxId) return;
     if (curr_val==hint) { curr_val=results[curr_id]; correct=-1; }
     // check result/carry + highlight next element
@@ -359,9 +356,9 @@ function multiplikation () {
     if (nCols<1) { nCols=1; }
     if (nRows<1) { nRows=1; }
     var max=Math.pow(10,nCols);
-    val1=Math.floor(Math.random()*Math.pow(10,nCols));
+    var val1=Math.floor(Math.random()*Math.pow(10,nCols));
     if (val1<2) val1=9-val1;
-    val2=Math.floor(Math.random()*Math.pow(10,nRows));
+    var val2=Math.floor(Math.random()*Math.pow(10,nRows));
     if (val2<2) val2=9-val2;
     val2=""+val2;
     tmp=""+val1;
@@ -397,9 +394,9 @@ function division () {
     if (nCols<1) { nCols=1; }
     if (nRows<1) { nRows=1; }
     var max=Math.pow(10,nCols);
-    val1=Math.floor(Math.random()*Math.pow(10,nCols));
+    var val1=Math.floor(Math.random()*Math.pow(10,nCols));
     if (val1<2) val1=9-val1;
-    val2=Math.floor(Math.random()*Math.pow(10,nRows));
+    var val2=Math.floor(Math.random()*Math.pow(10,nRows));
     if (val2<2) val2=9-val2;
     // problems if result <1 (0.xxx):
     if (val1<val2) { tmp=val1; val1=val2; val2=tmp; } 
@@ -410,8 +407,8 @@ function division () {
     result=""+val1+":"+val2+"=";
     hide=result.length;
     str="";
-    nachKomma=2; if (col1<col2) nachKomma=col2-col1+2;
-    val=val1.substr(0,col2); l1=col2;
+    var nachKomma=2; if (col1<col2) nachKomma=col2-col1+2;
+    var val=val1.substr(0,col2); l1=col2;
     if (parseInt(val)<val2) { val+=val1.substr(l1,1); l1++; }
     val=parseInt(val);
     //alrt("v="+val+" l1="+l1+" c1="+col1+" c2="+col2);
@@ -421,6 +418,8 @@ function division () {
 	result+=res1;
 	maxId++;
 	resultIds[iRes]=maxId; 
+	// don't show parts for next intermediate result:
+	if (l1==col1+nachKomma) break; 
 	msg+=maxId+"="+res1+" ";
 	iRes++;
 	tmp=res1*val2;
@@ -463,7 +462,7 @@ function write_table(calc) {
     }
 
 function new_ (m_) {
-    var calc="", tmp, size, colour, grade, kb, nokb;
+    var calc="", tmp, size, colour, grade, keys_, kb, nokb;
     if (m_==undefined) { m_=m; } 
     else { // m=m_; 
 	tmp=m_.substr(2);
@@ -492,15 +491,17 @@ function new_ (m_) {
 	    +"</span>";
 	// alrt(colour);
 	document.getElementById('Total').innerHTML+=tmp;
+	document.getElementById('debug').innerHTML="";
 	}
     carry=""; n_correct=0; n_wrong=0; tmp=""; kb="keyboard2"; nokb="keyboard1";
     resultIds=new Array();
     requestFinish=0;
+    keys_="0123456789"+hint;
     switch (m) {
       case "1": calc=subtraktion(); break;
       case "2": calc=multiplikation(); break;
       case "3": calc=division();
-	    kb="keyboard1"; nokb="keyboard2";
+	    kb="keyboard1"; nokb="keyboard2"; keys_=sep+keys_;
 	    break;
       default: calc=addition(); break;
       }
@@ -508,9 +509,10 @@ function new_ (m_) {
     prevM=document.getElementById("op"+m).innerHTML;
     tmp+=hint; // show next part of result
     write_table(calc);
-    document.getElementById(kb).innerHTML=keyboard;
+    document.getElementById(kb).innerHTML=
+	'<table>'+write_row(0,"k"+keys_,"kb")+'</table>';
     document.getElementById(nokb).innerHTML="";
-    setOnClick("button, td");
+    setOnClick("td");
     } // new_
 
 function check_result() {
@@ -548,17 +550,20 @@ function changeStyle (styleId,attr,val) {
 	    else j++;
 	    }
 	}
-    if (i>=0) alrt("changeStyle: "+styleId+" not found");
-    else alrt("changeStyle "+styleId);
+    if (i>=0) { alrt("changeStyle: "+styleId+" not found"); }
+    else if (debg>0) alrt("CS "+styleId);
     }
 
 
 function mobile_ () {
-    if (userAgent.match(/Android|Mobile/) || debg==2) {
+    if (userAgent.match(/Android|Mobile/) || Math.abs(debg)==2) {
 	fontSize=20;
 	changeStyle("html","font-size",""+fontSize+"pt");
 	changeStyle("td","font-size","35pt");
+	//if (debg!=0) 
+	  alrt("mobile");
 	}
+    else if (debg>0) alrt("*");
     }
 
 function Finish() { 
@@ -572,31 +577,42 @@ function Finish() {
     else if(navigator.device) { navigator.device.exitApp(); }
     //else if (window.history) { window.history.back(); }
     else { window.close(); } // usually not working 
+    } // Finish
+
+// Used to exit:
+function onDeviceReady() {
+    document.addEventListener(“backbutton”, onBackKeyDown, false);
+    }
+function onBackKeyDown() {
+    navigator.app.exitApp();
     }
 
+document.addEventListener("deviceready", onDeviceReady, false);
+
+// --
+
+debg=0;
 int_trans(); // preset variables for translated text messages
 if (window.location.search != "") { read_params(window.location.search); }
 document.getElementById('title').innerHTML
     =_('Exercises in')+" "+_('Basic Arithmetic Operations');
 document.getElementById('help').innerHTML=_('Help');
 mobile_();
-keyboard=write_row(0,"k0123456789"+sep+hint);
-document.getElementById('keyboard2').innerHTML=keyboard;
-setOnClick("img");
-m=(m==undefined ?1 : parseInt(m));
+setOnClick("img, button");
+m=(m==undefined ? 1 : parseInt(m));
 if (isNaN(m) || m<0 || m>3) m=1; // start with minus
 new_("op"+m);
 //debg_();
   // Show all smileys (only in debug mode):
-    if (debg>0) {
-	for (i=0; i<=2; i++) {
-	  for (j=0; j<emoticons[i].length; j++) {
-	    emo=emoticons[i][j]; 
+    if (debg>2) {
+	var msg="";
+	for (var i=0; i<=2; i++) {
+	  for (var j=0; j<emoticons[i].length; j++) {
+	    var emo=emoticons[i][j]; 
 	    msg+=(emo==undefined?"?"+i+j:"&#x"+emo.toString(16)+";");
 	    }
 	  msg+="<br>";
 	  }
+	for (var k in navigator) { msg+=k+"="+navigator[k]+'&nbsp;'; }
 	alrt(msg);
 	}
-
-
