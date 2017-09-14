@@ -84,8 +84,10 @@ function int_trans() {
     trans['de-klick to select field']
 	="ggf. vorher ins gewünschte Feld klicken";
     trans['de-show next part of result']="zeigt nächsten Ergebnisteil";
-    trans['de-Klick Adam Riese logo twice to exit']
-	="Ende mit 2* Klick auf Adam Riese-Logo";
+    //trans['de-Klick Adam Riese logo twice to exit']
+	//="Ende mit 2* Klick auf Adam Riese-Logo";
+    trans['Back button apears after scrolling from top side']
+        ="Zurück-Button erscheint, wenn von oben gewischt wird."
     } // int_trans()
 
 function help_(str) {
@@ -100,7 +102,8 @@ function help_(str) {
 	str+="<br>"+_('input field has yellow background');
 	str+="<br>("+_('klick to select field')+").";
 	str+="<br>"+hint+" : "+_('show next part of result');
-	str+="<br>"+_('Klick Adam Riese logo twice to exit');
+	//str+="<br>"+_('Klick Adam Riese logo twice to exit');
+        str+="<br>"+_('Back button apears after scrolling from top side');
 	}
     else str=_(str);
     document.getElementById('dialog').innerHTML=str;
@@ -579,16 +582,6 @@ function Finish() {
     else { window.close(); } // usually not working 
     } // Finish
 
-// Used to exit:
-function onDeviceReady() {
-    document.addEventListener(“backbutton”, onBackKeyDown, false);
-    }
-function onBackKeyDown() {
-    navigator.app.exitApp();
-    }
-
-// --
-
 debg=0;
 int_trans(); // preset variables for translated text messages
 if (window.location.search != "") { read_params(window.location.search); }
@@ -614,7 +607,3 @@ new_("op"+m);
 	for (var k in navigator) { msg+=k+"="+navigator[k]+'&nbsp;'; }
 	alrt(msg);
 	}
-
-// Exit?
-document.addEventListener("deviceready", onDeviceReady, false);
-// --
