@@ -587,8 +587,6 @@ function onBackKeyDown() {
     navigator.app.exitApp();
     }
 
-document.addEventListener("deviceready", onDeviceReady, false);
-
 // --
 
 debg=0;
@@ -616,3 +614,7 @@ new_("op"+m);
 	for (var k in navigator) { msg+=k+"="+navigator[k]+'&nbsp;'; }
 	alrt(msg);
 	}
+
+// Exit?
+document.addEventListener("deviceready", onDeviceReady, false);
+// --
