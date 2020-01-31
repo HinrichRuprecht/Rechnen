@@ -24,49 +24,49 @@
 	width: 1.2em;
 	height: 1.2em;
 	}
-      td.box {
+      td.bo { <!-- box -->
         border:1px solid;
 	border-collapse:collapse; 
 	}
-      td.nobox { border-collapse:collapse; }
-      td.xbox {
+      td.nobo { border-collapse:collapse; }
+      td.xbo {
 	border-collapse:collapse; 
 	font-size:25%;
 	}
-      td.result { border:2px ridge; }
-      td.xresult {
+      td.kb { <!-- keyboard -->
+        border:1px solid;
+	border-collapse:collapse; 
+	background-color:#f0f0f0;
+	}
+      td.re { border:2px ridge; } <!-- result -->
+      td.xre {
 	border-collapse:collapse; 
 	font-size:25%;
 	}
-      td.carry {
+      td.ca { <!-- carry -->
         border:1px solid;
 	text-align: right;
 	border-collapse:collapse; 
 	font-size:75%;
 	height: 80%;
 	}
-      td.xcarry {
+      td.xca {
         overflow:hidden;
         vertical-align:top;
 	font-size:25%;
 	height: 80%;
 	}
-      .b1 { font-size:180%; }
-      .b2 { font-size:120%; }
-      .b3 { font-size:100%; }
+      button.b1 { font-size:180%; }
+      button.b2 { font-size:140%; }
+      button.b3 { font-size:100%; }
+      p.ex { font-size:140%; }
     </style>
 <h1><span id="title"></span>
 <img id="icon" src="AdamRiese.ico" height=43></h1>
 <span id="Total"></span><span id='debug'></span><br>
-<button class="b1" id="op0">&plus;</button>&nbsp;
-<button class="b1" id="op1">&minus;</button>&nbsp;
-<button class="b1" id="op2">&times;</button>&nbsp;
-<button class="b1" id="op3">&divide;</button>&nbsp;
+<span id="buttons1"></span>
 &nbsp;<span id="emoticon" style="font-size:large;"></span>&nbsp;
-<button class="b2" id="ch0">&lt;</button>&nbsp;
-<button class="b2" id="ch1">&gt;</button>&nbsp;
-<button class="b2" id="ch2">&or;</button>&nbsp;
-<button class="b2" id="ch3">&and;</button>&nbsp;
+<span id="buttons2"></span>
 <br>
 <span id="keyboard1" style="font-size:large; font-family:monospace;"></span>
 
@@ -74,6 +74,7 @@
 
 <span id="keyboard2" style="font-size:large; font-family:monospace;"></span>
 <br><button class="b3" id="help">help</button>&nbsp;
+    <span id="changeMode"></span>
 <br>
 <span id='dialog'></span>&nbsp;&nbsp;
 <script src="basicarithmetics.js"></script>
