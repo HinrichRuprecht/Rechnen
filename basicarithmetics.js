@@ -1,5 +1,6 @@
 // javascript sources for Basic Arithmetics
 "use strict";
+var mobile=0;
 var cellsize=10, fontSize=10;
 var colours=new Array("white","lime","yellow","red","aqua","fuchsia","blue");
 var language=navigator["language"];
@@ -12,6 +13,7 @@ var modeStr=new Array("&plus;&minus;&times;&divide;","1&times;1","&#129504;");
 var modeHelp=new Array("paper arithmetic","multiplication table",
 		       "mental arithmetic");
 var keyboard; var xMult=0, xMultId;
+//var tableClass="x";
 if (language="de") sep=",";
 var trans=new Array();
 var values=new Array();
@@ -225,6 +227,8 @@ function read_params(searchstr) { // interpret parameters from url
     regexp=/\&l\=([^\&]+)\&/; par=regexp.exec(src); if (par) language=par[1];
     regexp=/\&m\=([^\&]+)\&/; par=regexp.exec(src); if (par) m=par[1];
     regexp=/\&t\=([^\&]+)\&/; par=regexp.exec(src); if (par) debg=par[1];
+    regexp=/\&mo\=([^\&]+)\&/; par=regexp.exec(src); if (par) mobile=par[1];
+    regexp=/\&mode\=([^\&]+)\&/; par=regexp.exec(src); if (par) mode=par[1];
     } // read_params()
 
 function debg_() { // currently not used
@@ -665,7 +669,8 @@ function new_ (m_) {
     write_table(calc);
     if (mode==0) {
 	document.getElementById(kb).innerHTML=
-	    '<table>'+write_row(0,"k"+keys_,"kb")+'</table>';
+	    '<table>'+write_row(0,"k"+keys_,"kb")
+		+'</table>';
 	}
     else { nokb="keyboard1"; show100(); }
     document.getElementById(nokb).innerHTML="";
@@ -701,7 +706,8 @@ function show100(f) {
 	    }
 	str+='</tr>';
 	}
-    document.getElementById('keyboard2').innerHTML='<table>'+str+'</table>';
+    document.getElementById('keyboard2').innerHTML
+	='<table>'+str+'</table>';
     setOnClick("td");
     } // show100
 
@@ -723,18 +729,26 @@ function changeStyle (styleId,attr,val) {
 	}
     if (i>=0) { alrt("changeStyle: "+styleId+" not found"); }
     else if (debg>0) alrt("CS "+styleId);
-    }
+    } // changeStyle
 
 
 function mobile_ () {
-    if (userAgent.match(/Android|Mobile/) || Math.abs(debg)==2) {
-	fontSize=20;
+    if (userAgent.match(/Android|Mobile/) || Math.abs(debg)==2 || mobile>0) {
+	fontSize=40;
 	changeStyle("html","font-size",""+fontSize+"pt");
+	//changeStyle("span","font-size",""+fontSize+"pt");
+	changeStyle("p.ex","font-size",""+fontSize+"pt");
 	changeStyle("td","font-size","35pt");
+	//document.getElementsByTagName('table.td')[0].style.fontSize="35pt";
+	//changeStyle("table","width","100%");
+	//tableClass="w";
 	//if (debg!=0) 
 	  alrt("mobile");
+	mobile=1;
 	}
-    else if (debg>0) alrt("*");
+    else {
+	if (debg>0) alrt("*");
+	}
     }
 
 function Finish() { 
@@ -755,7 +769,7 @@ int_trans(); // preset variables for translated text messages
 if (window.location.search != "") { read_params(window.location.search); }
 document.getElementById('title').innerHTML
     =_('Exercises in')+" "+_('Basic Arithmetic Operations');
-mobile_();
+//mobile_();
 document.getElementById('help').innerHTML=_('Help');
 setMode("mo"+mode);
 //showButtons(1);
