@@ -13,7 +13,6 @@ var modeStr=new Array("&plus;&minus;&times;&divide;","1&times;1","&#129504;");
 var modeHelp=new Array("paper arithmetic","multiplication table",
 		       "mental arithmetic");
 var keyboard; var xMult=0, xMultId;
-//var tableClass="x";
 if (language="de") sep=",";
 var trans=new Array();
 var values=new Array();
@@ -108,11 +107,14 @@ function setMode(id) {
 function checkX(id) {
     var curr_val,col;
     curr_val=document.getElementById(id).innerHTML;
-    if (mode==1) { col=((curr_val%xMult)==0 ? 1 : 3); }
+    if (mode==1) { col=(curr_val==xMult ? 4 :((curr_val%xMult)==0 ? 1 : 3)); }
     else { // mode=2
 	col=(curr_val==result ? 1 : 3); 
 	}
+    if (document.getElementById(id).style.backgroundColor==colours[col]) 
+	return; // already hit
     document.getElementById(id).style.backgroundColor=colours[col];
+    if (col==4) return; // 1xX is too simple
     set_emoticon(col==1);
     if (col==1 && mode==2) setTimeout("new100()",1000);
     }
@@ -264,13 +266,19 @@ function getEmoticon(grade,next) { // 0=bad, 1=neutral, 2=good
     }
 function getColor(good,bad) {
     var red, green, blue="00";
+    green=(good==0 ? 0 : 255-5*bad); 
     green=Math.floor(255*good/(good+bad));
-    red=255-green;
-    if (good<bad) { red=255; }
-    else if (good==bad) { red=255; green=255; }
-    else { green=255; }
+    if (green<0) green=0;
+    //red=255-green;
+    red=Math.floor(255*bad/(good+bad));
+    blue=Math.floor(255-(green+red)/2);
+    //if (good<bad) { red=255; }
+    //else if (good==bad) { red=255; green=255; }
+    //else { green=255; }
     red=red.toString(16); if (red.length==1) red="0"+red;
     green=green.toString(16); if (green.length==1) green="0"+green;
+    blue=blue.toString(16); if (blue.length==1) blue="0"+blue;
+    //alrt("g="+255*good/(good+bad));
     return "#"+red+green+blue;
     } 
 
@@ -732,25 +740,6 @@ function changeStyle (styleId,attr,val) {
     } // changeStyle
 
 
-function mobile_ () {
-    if (userAgent.match(/Android|Mobile/) || Math.abs(debg)==2 || mobile>0) {
-	fontSize=40;
-	changeStyle("html","font-size",""+fontSize+"pt");
-	//changeStyle("span","font-size",""+fontSize+"pt");
-	changeStyle("p.ex","font-size",""+fontSize+"pt");
-	changeStyle("td","font-size","35pt");
-	//document.getElementsByTagName('table.td')[0].style.fontSize="35pt";
-	//changeStyle("table","width","100%");
-	//tableClass="w";
-	//if (debg!=0) 
-	  alrt("mobile");
-	mobile=1;
-	}
-    else {
-	if (debg>0) alrt("*");
-	}
-    }
-
 function Finish() { 
     requestFinish++;
     if (requestFinish==1) return;
@@ -769,7 +758,6 @@ int_trans(); // preset variables for translated text messages
 if (window.location.search != "") { read_params(window.location.search); }
 document.getElementById('title').innerHTML
     =_('Exercises in')+" "+_('Basic Arithmetic Operations');
-//mobile_();
 document.getElementById('help').innerHTML=_('Help');
 setMode("mo"+mode);
 //showButtons(1);
